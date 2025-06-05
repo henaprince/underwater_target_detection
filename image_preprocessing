@@ -1,1 +1,128 @@
-Multi-layered fusion of  CLABPHE and image constancy sharpeneing enhancement technique
+## Multi-layered fusion of  CLABPHE and image constancy sharpeneing enhancement technique##
+clc;clear all;close all;
+%tic
+img = imread('i3.png');
+% white balance
+img1 = ColorBalance(img);
+% figure;
+% imshow(img1);
+%img1 = imread('?2-white patch.jpg');
+cform = makecform('srgb2lab');%srgb?lab??????? 
+
+I_lin = rgb2lin(img1);
+% figure;
+% imshow(I_lin);
+percentiles = 0;
+illuminant = illumgray(I_lin,percentiles);
+I_lin = chromadapt(I_lin,illuminant,'ColorSpace','linear-rgb');
+Iwb = lin2rgb(I_lin);
+% figure;
+% imshow(I_lin);
+%% Gamma Correction
+Igamma = imadjust(Iwb,[],[],2);
+
+% figure('name', 'Gamma Correction');
+% imshow([Iwb, Igamma])
+
+lab1 = applycform(img1,cform);%LAB?? 
+% ig=Igamma;
+%  img1=im2double(Iwb);
+% CLAHE
+%CLAHE????Contrast Limited Adaptive Histogram Equalization 
+%??????????????
+lab2 = lab1;
+lab2(:, :, 1) = adapthisteq(lab2(:, :, 1));
+cform = makecform('lab2srgb');
+img2 = applycform(lab2,cform);
+%img2 = imread('putongzhifangtu.jpg');
+%imwrite(img2,'./dierpianlunwen/CLAHE6.jpg'); 
+%%unsharp masking
+J=Igamma+(Igamma-imgaussfilt(Igamma));
+% figure('name', 'un sharpening');
+%  imshow([Iwb,Igamma, J])
+%% image sharpening
+sigma = 15
+Igauss = Igamma;
+N = 30;
+for iter=1: N
+   Igauss =  imgaussfilt(Igauss,sigma);
+   Igauss = min(Igamma, Igauss);
+end
+
+gain = 0.01; %in the paper is not mentioned, but sometimes gain <1 is better. 
+Norm = (Igamma-gain*Igauss);
+%Norm
+for n = 1:3
+   Norm(:,:,n) = histeq(Norm(:,:,n)); 
+end
+Isharp = 1*(Igamma + Norm)/1;
+
+%  figure('name', 'image sharpening');
+%  imshow([Iwb,Igauss,Norm, Isharp])
+
+img1= double(img2);
+img2= double(Isharp);
+%%fusion by rajni
+%% pyramid decompostion
+%Weight maps of the First Input
+luminanceWeightmap1 = luminanceWeightmap(img1);
+saliencyWeightmap1 = saliencyWeightmap(img1);
+% subplot(1,2,1),imshow(luminanceWeightmap1);
+% figure('name','saliency and luminance weight map of 1st image');
+% imshow([luminanceWeightmap1,saliencyWeightmap1])
+% subplot(1,2,2),imshow(saliencyWeightmap1);title('saliencyWeightmap of First input');
+%Resultant Weight map of the first input
+resultedWeightmap1 = (luminanceWeightmap1 + saliencyWeightmap1) ;
+% figure('name','Resultant1');
+% imshow(resultedWeightmap1);
+%Weightmaps of the Second Input
+luminanceWeightmap2 = luminanceWeightmap(img2);
+% subplot(1,2,1), imshow(luminanceWeightmap2);title('luminanceWeightmap of Second input');
+saliencyWeightmap2 = saliencyWeightmap(img2);
+% subplot(1,2,2), imshow(saliencyWeightmap2);title('saliencyWeightmap of Second input');
+% figure('name','saliency and luminance weight map of 2nd image');
+% imshow([luminanceWeightmap2,saliencyWeightmap2])
+%Resultant Weight map of the second input
+resultedWeightmap2 = (luminanceWeightmap2 + saliencyWeightmap2);
+% figure('name','Resultant2');
+% imshow(resultedWeightmap2);
+%Normalized Weight maps of the Inputs
+normaizedWeightmap1 = resultedWeightmap1 ./ (0.01+ resultedWeightmap2 +resultedWeightmap1);
+normaizedWeightmap2 = resultedWeightmap2 ./ (0.01+ resultedWeightmap2 +resultedWeightmap1);
+%Generating Gaussian Pyramid for normalized weight maps
+W=normaizedWeightmap1+normaizedWeightmap2;
+% imshow((W));
+title('just addition')
+Weight1 = gaussian_pyramid(normaizedWeightmap1,5);
+Weight2 = gaussian_pyramid(normaizedWeightmap2,5)
+
+% calculate the laplacian pyramid
+level = 5;
+% input1
+R1 = laplacian_pyramid(img1(:, :, 1), level);
+G1 = laplacian_pyramid(img1(:, :, 2), level);
+B1 = laplacian_pyramid(img1(:, :, 3), level);
+f1 = cat(3, R1, G1, B1);
+
+% input2
+R2 = laplacian_pyramid(img2(:, :, 1), level);
+G2 = laplacian_pyramid(img2(:, :, 2), level);
+B2 = laplacian_pyramid(img2(:, :, 3), level);
+f2 = cat(3, R1, G1, B1);
+
+
+% fusion
+for i = 1 : level
+    R_r{i} = Weight1{i} .* R1{i} + Weight2{i} .* R2{i};
+    R_g{i} = Weight1{i} .* G1{i} + Weight2{i} .* G2{i};
+    R_b{i} = Weight1{i} .* B1{i} + Weight2{i} .* B2{i};
+end
+% reconstruct & output
+R = pyramid_reconstruct(R_r);
+G = pyramid_reconstruct(R_g);
+B = pyramid_reconstruct(R_b);
+fusedImage = cat(3, uint8(R), uint8(G), uint8(B));
+fusedImage1=cat(3,R,G,B);
+fus=rgb2hsv(fusedImage);
+% toc;
+% figure, imshow([img,uint8(fusedImage)]);
