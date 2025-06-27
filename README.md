@@ -2,7 +2,7 @@
 
 This repository contains the source code, models, and instructions for reproducing the results from our paper:
 
-**"Transformer-Enhanced YOLO for Underwater Object Detection and Classification amidst Challenging Lighting Conditions"**, accepted in *The Visual Computer, Springer, 2025*.
+**"Transformer-Enhanced YOLO for Underwater Object Detection and Classification amidst Challenging Lighting Conditions"**,  *The Visual Computer, Springer, 2025*.
 
 ---
 
