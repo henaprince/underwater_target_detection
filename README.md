@@ -2,11 +2,8 @@
 
 This repository contains the source code, models, and instructions for reproducing the results from our paper:
 
-**"Transformer-Enhanced YOLO for Underwater Object Detection and Classification amidst Challenging Lighting Conditions"**,  *The Visual Computer, Springer, 2025*.
-
----
-
-## 📄 Abstract
+**"Transformer-Enhanced YOLO for Underwater Object Detection and Classification amidst Challenging Lighting Conditions"**,  *
+📄 Abstract
 
 Underwater object detection is challenging due to poor lighting and visibility. This work combines a contrast-limited adaptive enhancement method (CLABPHE + sharpening) with an enhanced YOLOv5s model using a Transformer Block and Cross-Convolution module (CC-TBC). Our system improves mAP@0.5, precision, and F1-score over YOLOv5, YOLOv8, and Faster RCNN on the DUO dataset.
 
@@ -28,7 +25,5 @@ if you use our code,cite:
 @article{prince2025transformer,
   title={Transformer-Enhanced YOLO for Underwater Object Detection and Classification amidst Challenging Lighting Conditions},
   author={Prince, Hena and Binesh, T.},
-  journal={The Visual Computer},
-  year={2025},
-  publisher={Springer}
+  
 }
