@@ -15,6 +15,7 @@ Underwater object detection is challenging due to poor lighting and visibility. 
 - PyTorch >= 2.0.0
 - OpenCV
 - Ultralytics (for YOLOv5)
+- !pip install Roboflow
 - NumPy, Matplotlib
 
 Install dependencies:
